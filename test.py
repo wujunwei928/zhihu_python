@@ -140,12 +140,16 @@ def user_test(user_url):
     print collections_num  # 44
     print agree_num  # 46387
     print thanks_num  # 11477
+    print user.get_data_id()
+    import sys;
+    sys.exit();
 
     print followees
     # <generator object get_followee at 0x7ffcac3af050>
     # 代表所有该用户关注的人的生成器对象
     i = 0
     for followee in followees:
+        print followee.user_url
         print followee.get_user_id()
         i = i + 1
         if i == 41:
@@ -221,17 +225,19 @@ def test():
             answer.to_txt()
             answer.to_md()
 
+def spider_user():
+    pass
 
 def main():
-    url = "http://www.zhihu.com/question/24269892"
-    question_test(url)
-    answer_url = "http://www.zhihu.com/question/24269892/answer/29960616"
-    answer_test(answer_url)
-    user_url = "http://www.zhihu.com/people/jixin"
+    # url = "http://www.zhihu.com/question/24269892"
+    # question_test(url)
+    # answer_url = "http://www.zhihu.com/question/24269892/answer/29960616"
+    # answer_test(answer_url)
+    user_url = "https://www.zhihu.com/people/kaifulee"
     user_test(user_url)
-    collection_url = "http://www.zhihu.com/collection/36750683"
-    collection_test(collection_url)
-    test()
+    # collection_url = "http://www.zhihu.com/collection/36750683"
+    # collection_test(collection_url)
+    # test()
 
 
 if __name__ == '__main__':
