@@ -584,6 +584,7 @@ class User:
         user_info = {
             'user_unique' : self.get_user_unique(),
             'user_name' : self.get_user_id(),
+            'gender' : self.get_gender(),
             'location' : self.get_location(),
             'business' : self.get_business(),
             'employment' : self.get_employment(),
