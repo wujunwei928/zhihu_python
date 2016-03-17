@@ -404,6 +404,21 @@ class User:
             location = soup_html['title'] if soup_html.has_key('title') else ''
             return location
 
+    # 获取用户头像
+    def get_avatar(self):
+        if self.user_url == None:
+            print "I'm anonymous user."
+            return ''
+        else:
+            if self.soup == None:
+                self.parser()
+            soup = self.soup
+            soup_html = soup.find("img", class_="Avatar--l")
+            if soup_html is None:
+                return ''
+            avatar = soup_html['src'] if soup_html.has_key('src') else ''
+            return avatar
+
     def get_business(self):
         if self.user_url == None:
             print "I'm anonymous user."
@@ -547,6 +562,21 @@ class User:
             answers_num = int(soup.find_all("span", class_="num")[1].string)
             return answers_num
 
+    def get_answers_marked_num(self):
+        if self.user_url == None:
+            print "I'm anonymous user."
+            return 0
+        else:
+            if self.soup == None:
+                self.parser()
+            soup = self.soup
+            answers_marked_num = 0
+            soup_html = soup.find("div", class_="zm-profile-header-marked")
+            if soup_html != None:
+                # 正则表达式匹配
+                answers_marked_num = int(re.search(r"\d+", soup_html.a.string).group())
+            return answers_marked_num
+
     def get_posts_num(self):
         if self.user_url == None:
             print "I'm anonymous user."
@@ -585,6 +615,7 @@ class User:
             'user_unique' : self.get_user_unique(),
             'user_name' : self.get_user_id(),
             'gender' : self.get_gender(),
+            'avatar' : self.get_avatar(),
             'location' : self.get_location(),
             'business' : self.get_business(),
             'employment' : self.get_employment(),
@@ -595,7 +626,7 @@ class User:
             'followees_num' : self.get_followees_num(),
             'asks_num' : self.get_asks_num(),
             'answers_num' : self.get_answers_num(),
-            'answers_marked_num' : self.get_answers_num(),
+            'answers_marked_num' : self.get_answers_marked_num(),
             'collections_num' : self.get_collections_num(),
             'agree_num' : self.get_agree_num(),
             'thanks_num' : self.get_thanks_num(),

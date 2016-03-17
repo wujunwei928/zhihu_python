@@ -125,6 +125,8 @@ def user_spider(user_url):
     # 获取当前用户信息
     user = User(user_url)
     user_info = user.get_user_info()
+    # print user_info;
+    # sys.exit()
 
     # 将用户数据插入数据库
     try:
