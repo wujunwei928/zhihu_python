@@ -89,8 +89,8 @@ if islogin() != True:
     raise Exception("无权限(403)")
 
 
-reload(sys)
-sys.setdefaultencoding('utf8')
+# reload(sys)
+# sys.setdefaultencoding('utf8')
 
 class Question:
     url = None
@@ -326,6 +326,13 @@ class User:
         soup = BeautifulSoup(r.content)
         self.soup = soup
 
+    def get_user_unique(self):
+        if self.user_url == None:
+            # print "I'm anonymous user."
+            return "匿名用户"
+        else:
+            return self.user_url.split('/')[-1];
+
     def get_user_id(self):
         if self.user_url == None:
             # print "I'm anonymous user."
@@ -379,6 +386,98 @@ class User:
                     return 'male'
             except:
                 return 'unknown'
+
+
+
+    def get_location(self):
+        if self.user_url == None:
+            print "I'm anonymous user."
+            return ''
+        else:
+            if self.soup == None:
+                self.parser()
+            soup = self.soup
+            soup_html = soup.find("span", class_="location")
+            # 如果匹配不到, soup_html 返回None, 下面调用has_key报错, 这里兼容一下
+            if soup_html is None:
+                return ''
+            location = soup_html['title'] if soup_html.has_key('title') else ''
+            return location
+
+    def get_business(self):
+        if self.user_url == None:
+            print "I'm anonymous user."
+            return ''
+        else:
+            if self.soup == None:
+                self.parser()
+            soup = self.soup
+            soup_html = soup.find("span", class_="business")
+            if soup_html is None:
+                return ''
+            business = soup_html['title'] if soup_html.has_key('title') else ''
+            return business
+
+            
+    def get_employment(self):
+        if self.user_url == None:
+            print "I'm anonymous user."
+            return ''
+        else:
+            if self.soup == None:
+                self.parser()
+            soup = self.soup
+            soup_html = soup.find("span", class_="employment")
+            if soup_html is None:
+                return ''
+            employment = soup_html['title'] if soup_html.has_key('title') else ''
+            return employment
+
+
+    def get_position(self):
+        if self.user_url == None:
+            print "I'm anonymous user."
+            return ''
+        else:
+            if self.soup == None:
+                self.parser()
+            soup = self.soup
+            soup_html = soup.find("span", class_="position")
+            if soup_html is None:
+                return ''
+            position = soup_html['title'] if soup_html.has_key('title') else ''
+            return position
+
+    def get_education(self):
+        if self.user_url == None:
+            print "I'm anonymous user."
+            return ''
+        else:
+            if self.soup == None:
+                self.parser()
+            soup = self.soup
+            soup_html = soup.find("span", class_="education")
+            if soup_html is None:
+                return ''
+            education = soup_html['title'] if soup_html.has_key('title') else ''
+            return education
+
+    def get_education_extra(self):
+        if self.user_url == None:
+            print "I'm anonymous user."
+            return ''
+        else:
+            if self.soup == None:
+                self.parser()
+            soup = self.soup
+            soup_html = soup.find("span", class_="education-extra")
+            if soup_html is None:
+                return ''
+            education_extra = soup_html['title'] if soup_html.has_key('title') else ''
+            return education_extra
+
+
+
 
     def get_followees_num(self):
         if self.user_url == None:
@@ -448,6 +547,17 @@ class User:
             answers_num = int(soup.find_all("span", class_="num")[1].string)
             return answers_num
 
+    def get_posts_num(self):
+        if self.user_url == None:
+            print "I'm anonymous user."
+            return 0
+        else:
+            if self.soup == None:
+                self.parser()
+            soup = self.soup
+            posts_num = int(soup.find_all("span", class_="num")[2].string)
+            return posts_num           
+
     def get_collections_num(self):
         if self.user_url == None:
             print "I'm anonymous user."
@@ -458,6 +568,41 @@ class User:
             soup = self.soup
             collections_num = int(soup.find_all("span", class_="num")[3].string)
             return collections_num
+
+    def get_logs_num(self):
+        if self.user_url == None:
+            print "I'm anonymous user."
+            return 0
+        else:
+            if self.soup == None:
+                self.parser()
+            soup = self.soup
+            logs_num = int(soup.find_all("span", class_="num")[4].string)
+            return logs_num
+
+    def get_user_info(self):
+        user_info = {
+            'user_unique' : self.get_user_unique(),
+            'user_name' : self.get_user_id(),
+            'location' : self.get_location(),
+            'business' : self.get_business(),
+            'employment' : self.get_employment(),
+            'position' : self.get_position(),
+            'education' : self.get_education(),
+            'education_extra' : self.get_education_extra(),
+            'followers_num' : self.get_followers_num(),
+            'followees_num' : self.get_followees_num(),
+            'asks_num' : self.get_asks_num(),
+            'answers_num' : self.get_answers_num(),
+            'answers_marked_num' : self.get_answers_num(),
+            'collections_num' : self.get_collections_num(),
+            'agree_num' : self.get_agree_num(),
+            'thanks_num' : self.get_thanks_num(),
+            'posts_num' : self.get_posts_num(),
+            'logs_num' : self.get_logs_num()
+        }
+
+        return user_info
 
     def get_followees(self):
         if self.user_url == None:
