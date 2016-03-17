@@ -26,7 +26,7 @@ from zhihu import Answer
 from zhihu import User
 from zhihu import Collection
 
-import sys,pymysql,time
+import sys,pymysql,time,redis
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -109,35 +109,45 @@ def prepare_insert_sql(table_name, data):
     sql = sql + key_sql + 'values' + val_sql
     return sql
 
+def get_user_redis_key(user_unique):
+    user_redis_key = 'zhihu_uu_' + user_unique
+    return user_redis_key
+
 # 爬取用户信息
 def user_spider(user_url):
     database_name = 'wjw_zhihu'
     table_name = 'user_info'
 
     # 设置数据库连接
-    conn=pymysql.connect(host='localhost',user='root',passwd='',port=3306)
+    conn=pymysql.connect(host='localhost',user='root',passwd='root',port=3306)
     cur=conn.cursor()
     # 选择数据库
     conn.select_db(database_name)
     # 设置编码, 否则插入数据库乱码
     cur.execute('set names utf8')
 
+    # 设置Redis链接, 记录爬过的user_unique
+    redis_conn = redis.Redis(host='127.0.0.1', port=6379, db=0)
+
     # 获取当前用户信息
     user = User(user_url)
-    user_info = user.get_user_info()
-    # print user_info;
-    # sys.exit()
+    user_unique = user.get_user_unique()
+    if redis_conn.get(get_user_redis_key(user_unique)) == None:
+        user_info = user.get_user_info()
+        # print user_info;
+        # sys.exit()
 
-    # 将用户数据插入数据库
-    try:
-        insert_sql = prepare_insert_sql(table_name, user_info)
-        res=cur.execute(insert_sql)
-        conn.commit()       # commit之后才能真正提交到数据库
-        print(user_info['user_unique'] + '  ------  ' + str(res))
-    except Exception as e:
-        # 打印日志, 记录异常信息
-        exceptMsg = str(e)
-        print(exceptMsg)
+        # 将用户数据插入数据库
+        try:
+            insert_sql = prepare_insert_sql(table_name, user_info)
+            res=cur.execute(insert_sql)
+            conn.commit()       # commit之后才能真正提交到数据库
+            redis_conn.set(get_user_redis_key(user_unique), 1)  #设置redis缓存, 防止重爬
+            print(user_info['user_unique'] + '  ------  ' + str(res))
+        except Exception as e:
+            # 打印日志, 记录异常信息
+            exceptMsg = str(e)
+            print(exceptMsg)
 
 
     # 获取该用户关注的人
@@ -161,20 +171,23 @@ def user_spider(user_url):
     i = 0
     for follower in followers:
         i = i + 1
-        if i <= 41:
-            continue
         if i % 10 == 0:
+            redis_conn.save()   # 将数据写回磁盘。保存时阻塞
             time.sleep(0.3)
-        try:
-            follower_info = follower.get_user_info()
-            follower_insert_sql = prepare_insert_sql(table_name, follower_info)
-            res=cur.execute(follower_insert_sql)
-            conn.commit()
-            print(follower_info['user_unique'] + '  ------  ' + str(res))
-        except Exception as e:
-            # 打印日志, 记录异常信息
-            exceptMsg = str(e)
-            print(exceptMsg)
+
+        follower_user_unique = follower.get_user_unique() 
+        if redis_conn.get(get_user_redis_key(follower_user_unique)) == None:
+            try:
+                follower_info = follower.get_user_info()
+                follower_insert_sql = prepare_insert_sql(table_name, follower_info)
+                res=cur.execute(follower_insert_sql)
+                conn.commit()
+                redis_conn.set(get_user_redis_key(follower_user_unique), 1)  #设置redis缓存, 防止重爬
+                print(follower_info['user_unique'] + '  ------  ' + str(res))
+            except Exception as e:
+                # 打印日志, 记录异常信息
+                exceptMsg = str(e)
+                print(exceptMsg)
 
     # print asks
     # <generator object get_ask at 0x7ffcab9db780>
@@ -244,12 +257,15 @@ def main():
     # question_test(url)
     # answer_url = "http://www.zhihu.com/question/24269892/answer/29960616"
     # answer_test(answer_url)
-    user_url = "https://www.zhihu.com/people/zhang-jia-wei"
-    # user_url = "https://www.zhihu.com/people/wujunwei928"
-    user_spider(user_url)
     # collection_url = "http://www.zhihu.com/collection/36750683"
     # collection_test(collection_url)
     # test()
+    
+    # 
+    # user_url = "https://www.zhihu.com/people/zhang-jia-wei"
+    user_url = sys.argv[1]
+    # user_url = "https://www.zhihu.com/people/wujunwei928"
+    user_spider(user_url.strip())
 
 # 知乎话题广场: https://www.zhihu.com/topics
 # 知乎发现更多: https://www.zhihu.com/explore/recommendations
