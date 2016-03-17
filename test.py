@@ -109,8 +109,8 @@ def prepare_insert_sql(table_name, data):
     sql = sql + key_sql + 'values' + val_sql
     return sql
 
-
-def user_test(user_url):
+# 爬取用户信息
+def user_spider(user_url):
     database_name = 'wjw_zhihu'
     table_name = 'user_info'
 
@@ -127,12 +127,15 @@ def user_test(user_url):
     user_info = user.get_user_info()
 
     # 将用户数据插入数据库
-    insert_sql = prepare_insert_sql(table_name, user_info)
-    # res=cur.execute(insert_sql)
-    # print(insert_sql)
-    # sys.exit()
-    # conn.commit()
-    # print(user_info['user_unique'] + '  ------  ' + str(res))
+    try:
+        insert_sql = prepare_insert_sql(table_name, user_info)
+        res=cur.execute(insert_sql)
+        conn.commit()       # commit之后才能真正提交到数据库
+        print(user_info['user_unique'] + '  ------  ' + str(res))
+    except Exception as e:
+        # 打印日志, 记录异常信息
+        exceptMsg = str(e)
+        print(exceptMsg)
 
 
     # 获取该用户关注的人
@@ -170,9 +173,6 @@ def user_test(user_url):
             # 打印日志, 记录异常信息
             exceptMsg = str(e)
             print(exceptMsg)
-        
-        
-        
 
     # print asks
     # <generator object get_ask at 0x7ffcab9db780>
@@ -244,7 +244,7 @@ def main():
     # answer_test(answer_url)
     user_url = "https://www.zhihu.com/people/zhang-jia-wei"
     # user_url = "https://www.zhihu.com/people/wujunwei928"
-    user_test(user_url)
+    user_spider(user_url)
     # collection_url = "http://www.zhihu.com/collection/36750683"
     # collection_test(collection_url)
     # test()
